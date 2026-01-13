@@ -1,15 +1,14 @@
-# --- 第一阶段：构建 ---
-# 将 FROM node:18-slim 改为阿里云的镜像地址
-FROM registry.cn-hangzhou.aliyuncs.com/central-mirror/node:18-slim AS build-stage
+# --- 第一阶段：构建 (使用 Bitnami Node 18) ---
+FROM bitnami/node:18 AS build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
 RUN npm run build
 
-# --- 第二阶段：运行 ---
-# 将 FROM nginx:stable-alpine 改为阿里云的镜像地址
-FROM registry.cn-hangzhou.aliyuncs.com/central-mirror/nginx:stable-alpine AS production-stage
-COPY --from=build-stage /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+# --- 第二阶段：运行 (使用 Bitnami Nginx) ---
+FROM bitnami/nginx:latest AS production-stage
+# Bitnami 的 Nginx 路径与官方略有不同，这是它的标准路径
+COPY --from=build-stage /app/dist /opt/bitnami/nginx/html
+EXPOSE 8080
+# Bitnami 镜像默认使用 8080 端口，非 root 运行更安全
