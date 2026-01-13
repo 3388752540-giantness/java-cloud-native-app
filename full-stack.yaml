@@ -17,7 +17,7 @@ spec:
       - name: aliyun-acr-secret
       containers:
       - name: java-backend
-        image: crpi-isruoknymwjt6jux.cn-hangzhou.personal.cr.aliyuncs.com/dja-repo/java-backend:latest
+        image: crpi-isruoknymwjt6jux.cn-hangzhou.personal.cr.aliyuncs.com/dja-repo/java-app-auto:backend-latest
         ports:
         - containerPort: 8080
 
@@ -55,7 +55,7 @@ spec:
       - name: aliyun-acr-secret
       containers:
       - name: vue-frontend
-        image: crpi-isruoknymwjt6jux.cn-hangzhou.personal.cr.aliyuncs.com/dja-repo/vue-frontend:latest
+        image: crpi-isruoknymwjt6jux.cn-hangzhou.personal.cr.aliyuncs.com/dja-repo/java-app-auto:frontend-latest
         ports:
         - containerPort: 80
 
