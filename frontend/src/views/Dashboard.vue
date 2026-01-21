@@ -43,13 +43,35 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
 
-const nodes = ref([
-  { name: 'k8s-master', ip: '192.168.37.100', role: 'Control-Plane', status: 'Ready', cpu: 24, mem: 58 },
-  { name: 'k8s-worker1', ip: '192.168.37.101', role: 'Worker', status: 'Ready', cpu: 12, mem: 35 },
-  { name: 'k8s-worker2', ip: '192.168.37.102', role: 'Worker', status: 'Ready', cpu: 8, mem: 30 }
-])
+// 初始化为空数组
+const nodes = ref([])
+
+// 后端 API 地址：指向你的 Master IP + Java 后端的 NodePort
+// 注意：如果在生产环境，这里通常会用相对路径或环境变量
+const API_BASE = 'http://192.168.37.100:30080/api'
+
+const fetchNodeData = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/nodes`)
+    nodes.value = response.data
+    console.log('成功获取节点数据:', response.data)
+  } catch (error) {
+    console.error('获取数据失败:', error)
+    ElMessage.error('无法连接到后端监控接口，请检查服务状态')
+  }
+}
+
+// 页面加载时自动执行一次
+onMounted(() => {
+  fetchNodeData()
+  
+  // 可选：开启自动刷新，每 10 秒刷新一次数据（实现实时监控效果）
+  setInterval(fetchNodeData, 10000)
+})
 
 const customColors = [
   { color: '#67c23a', percentage: 20 },
