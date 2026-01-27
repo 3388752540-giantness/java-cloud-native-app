@@ -15,6 +15,12 @@ import java.util.List;
 @CrossOrigin // 允许 Vue 前端跨域访问
 public class NodeController {
 
+    public NodeController(NodeService nodeService) {
+    this.nodeService = nodeService;
+    // 加上这行，启动时如果在日志里看到它，说明 Controller 绝对加载成功了
+    System.out.println("====== NodeController 已加载，准备就绪！======");
+    }
+
     @Autowired
     private NodeService nodeService;
 
