@@ -1,42 +1,17 @@
 <template>
-  <div class="dashboard-container">
+  <div class="dashboard">
     <el-row :gutter="20">
-      <!-- 循环渲染节点，key 使用数据库 ID -->
-      <el-col :span="8" v-for="node in nodes" :key="node.id">
-        <el-card :body-style="{ padding: '20px' }" class="node-card">
+      <!-- 遍历三个节点 -->
+      <el-col :span="24" v-for="node in ['k8s-master', 'k8s-worker1', 'k8s-worker2']" :key="node">
+        <el-card shadow="always" style="margin-bottom: 20px">
           <template #header>
             <div class="card-header">
-              <span class="node-name">
-                <!-- 修改点1: 字段名改为 nodeName -->
-                <el-icon><Platform /></el-icon> {{ node.nodeName }}
-              </span>
-              <el-tag :type="node.status === 'Ready' ? 'success' : 'danger'" effect="dark">
-                {{ node.status }}
-              </el-tag>
+              <b style="font-size: 18px">{{ node }} 实时指标</b>
+              <el-tag type="success">采集频率: 5s</el-tag>
             </div>
           </template>
-          
-          <div class="node-body">
-            <!-- 修改点2: 后端实体类暂时没有 IP 和 Role 字段，先改为显示 ID -->
-            <div class="info-row">
-              <span class="label">节点 ID:</span>
-              <span class="value">#{{ node.id }}</span>
-            </div>
-            
-            <el-divider content-position="left">资源占用</el-divider>
-            
-            <div class="progress-section">
-              <div class="progress-label">CPU Usage</div>
-              <!-- 修改点3: 字段名改为 cpuUsage -->
-              <el-progress :percentage="node.cpuUsage" :color="customColors" />
-            </div>
-            
-            <div class="progress-section">
-              <div class="progress-label">Memory Usage</div>
-              <!-- 修改点4: 字段名改为 memUsage -->
-              <el-progress :percentage="node.memUsage" :color="customColors" />
-            </div>
-          </div>
+          <!-- 这里放折线图的容器 -->
+          <div :id="'chart-' + node" style="width: 100%; height: 300px;"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -44,50 +19,54 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import * as echarts from 'echarts'
 
-const nodes = ref([])
-
-// 确保这里的 IP 是你的 Master 节点 IP，端口是 NodePort (30080)
 const API_BASE = 'http://192.168.37.100:30080/api'
+let timers = [] // 存放定时器
 
-const fetchNodeData = async () => {
-  try {
-    const response = await axios.get(`${API_BASE}/nodes`)
-    // 后端已经开启驼峰映射，这里直接赋值即可
-    nodes.value = response.data
-    console.log('真实数据已加载:', response.data)
-  } catch (error) {
-    console.error('API 请求失败:', error)
-    ElMessage.error('无法连接后端，请检查 K8s 服务状态')
+const initChart = async (nodeName) => {
+  const chartDom = document.getElementById('chart-' + nodeName)
+  const myChart = echarts.init(chartDom)
+  
+  const updateData = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/metrics/${nodeName}`)
+      const data = res.data
+      
+      const times = data.map(item => item.time)
+      // 处理 CPU 数据：截取数值（例如把 105165780n 转为容易看懂的数字）
+      const cpuValues = data.map(item => parseInt(item.cpu) / 1000000) 
+
+      myChart.setOption({
+        title: { text: 'CPU 负载趋势 (m)' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { data: times },
+        yAxis: { type: 'value' },
+        series: [{
+          name: 'CPU',
+          type: 'line',
+          data: cpuValues,
+          smooth: true,
+          areaStyle: {},
+          itemStyle: { color: '#409EFF' }
+        }]
+      })
+    } catch (e) { console.error("数据加载失败", e) }
   }
+
+  updateData() // 立即执行一次
+  const timer = setInterval(updateData, 5000) // 每5秒拉取一次
+  timers.push(timer)
 }
 
-// 页面加载时执行
 onMounted(() => {
-  fetchNodeData()
-  // 开启每 5 秒自动刷新，实现“实时监控”效果
-  setInterval(fetchNodeData, 5000)
+  ['k8s-master', 'k8s-worker1', 'k8s-worker2'].forEach(node => initChart(node))
 })
 
-const customColors = [
-  { color: '#67c23a', percentage: 20 },
-  { color: '#e6a23c', percentage: 40 },
-  { color: '#f56c6c', percentage: 80 }
-]
+// 页面关闭时销毁定时器，防止内存泄漏
+onUnmounted(() => {
+  timers.forEach(t => clearInterval(t))
+})
 </script>
-
-<style scoped>
-.dashboard-container { padding: 10px; }
-.node-card { margin-bottom: 20px; transition: all 0.3s; border-radius: 8px; }
-.node-card:hover { transform: translateY(-5px); }
-.card-header { display: flex; justify-content: space-between; align-items: center; }
-.node-name { font-weight: bold; display: flex; align-items: center; gap: 5px; }
-.info-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
-.label { color: #909399; }
-.value { font-family: monospace; font-weight: bold; }
-.progress-section { margin-top: 15px; }
-.progress-label { font-size: 12px; color: #606266; margin-bottom: 5px; }
-</style>

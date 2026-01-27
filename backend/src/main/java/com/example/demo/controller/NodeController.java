@@ -28,4 +28,27 @@ public class NodeController {
     public List<NodeStatus> getNodes() {
         return nodeService.getAllNodes();
     }
+
+    @GetMapping("/metrics/{nodeName}")
+    public List<Map<String, String>> getNodeMetrics(@PathVariable String nodeName) {
+    // 1. 从 Redis 获取最近 50 条数据
+    String redisKey = "metrics:node:" + nodeName;
+    List<String> rawData = redisTemplate.opsForList().range(redisKey, 0, -1);
+
+    // 2. 将 "时间|CPU|内存" 格式解析为 JSON 列表
+    List<Map<String, String>> result = new ArrayList<>();
+    if (rawData != null) {
+        for (String record : rawData) {
+            String[] parts = record.split("\\|");
+            if (parts.length == 3) {
+                Map<String, String> map = new HashMap<>();
+                map.put("time", parts[0]);
+                map.put("cpu", parts[1]);
+                map.put("mem", parts[2]);
+                result.add(map);
+            }
+        }
+    }
+    return result;
+    }
 }
