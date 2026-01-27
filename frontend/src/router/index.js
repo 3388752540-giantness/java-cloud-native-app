@@ -6,7 +6,7 @@ import Careers from '../views/Careers.vue';//作业删除
 
 const routes = [
   { path: '/', component: Dashboard },
-  { path: '/register', component: Register } // 添加路径
+  { path: '/register', component: Register }, // 添加路径
   { path: '/careers', component: Careers }
 ];
 
