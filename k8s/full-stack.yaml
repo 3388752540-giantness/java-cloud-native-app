@@ -74,6 +74,7 @@ spec:
       containers:
       - name: vue-frontend
         image: crpi-isruoknymwjt6jux.cn-hangzhou.personal.cr.aliyuncs.com/dja-repo/java-app-auto:frontend-latest
+        imagePullPolicy: Always  # <--- 加上这一行！强制每次都去云端拉新货
         ports:
         - containerPort: 80
 
