@@ -1,12 +1,14 @@
 <template>
   <div class="dashboard-container">
     <el-row :gutter="20">
-      <el-col :span="8" v-for="node in nodes" :key="node.name">
+      <!-- 循环渲染节点，key 使用数据库 ID -->
+      <el-col :span="8" v-for="node in nodes" :key="node.id">
         <el-card :body-style="{ padding: '20px' }" class="node-card">
           <template #header>
             <div class="card-header">
               <span class="node-name">
-                <el-icon><Platform /></el-icon> {{ node.name }}
+                <!-- 修改点1: 字段名改为 nodeName -->
+                <el-icon><Platform /></el-icon> {{ node.nodeName }}
               </span>
               <el-tag :type="node.status === 'Ready' ? 'success' : 'danger'" effect="dark">
                 {{ node.status }}
@@ -15,25 +17,24 @@
           </template>
           
           <div class="node-body">
+            <!-- 修改点2: 后端实体类暂时没有 IP 和 Role 字段，先改为显示 ID -->
             <div class="info-row">
-              <span class="label">内网 IP:</span>
-              <span class="value">{{ node.ip }}</span>
-            </div>
-            <div class="info-row">
-              <span class="label">节点角色:</span>
-              <el-tag size="small" type="warning">{{ node.role }}</el-tag>
+              <span class="label">节点 ID:</span>
+              <span class="value">#{{ node.id }}</span>
             </div>
             
             <el-divider content-position="left">资源占用</el-divider>
             
             <div class="progress-section">
               <div class="progress-label">CPU Usage</div>
-              <el-progress :percentage="node.cpu" :color="customColors" />
+              <!-- 修改点3: 字段名改为 cpuUsage -->
+              <el-progress :percentage="node.cpuUsage" :color="customColors" />
             </div>
             
             <div class="progress-section">
               <div class="progress-label">Memory Usage</div>
-              <el-progress :percentage="node.mem" :color="customColors" />
+              <!-- 修改点4: 字段名改为 memUsage -->
+              <el-progress :percentage="node.memUsage" :color="customColors" />
             </div>
           </div>
         </el-card>
@@ -47,30 +48,28 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 
-// 初始化为空数组
 const nodes = ref([])
 
-// 后端 API 地址：指向你的 Master IP + Java 后端的 NodePort
-// 注意：如果在生产环境，这里通常会用相对路径或环境变量
+// 确保这里的 IP 是你的 Master 节点 IP，端口是 NodePort (30080)
 const API_BASE = 'http://192.168.37.100:30080/api'
 
 const fetchNodeData = async () => {
   try {
     const response = await axios.get(`${API_BASE}/nodes`)
+    // 后端已经开启驼峰映射，这里直接赋值即可
     nodes.value = response.data
-    console.log('成功获取节点数据:', response.data)
+    console.log('真实数据已加载:', response.data)
   } catch (error) {
-    console.error('获取数据失败:', error)
-    ElMessage.error('无法连接到后端监控接口，请检查服务状态')
+    console.error('API 请求失败:', error)
+    ElMessage.error('无法连接后端，请检查 K8s 服务状态')
   }
 }
 
-// 页面加载时自动执行一次
+// 页面加载时执行
 onMounted(() => {
   fetchNodeData()
-  
-  // 可选：开启自动刷新，每 10 秒刷新一次数据（实现实时监控效果）
-  setInterval(fetchNodeData, 10000)
+  // 开启每 5 秒自动刷新，实现“实时监控”效果
+  setInterval(fetchNodeData, 5000)
 })
 
 const customColors = [
