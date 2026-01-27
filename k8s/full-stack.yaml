@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: redis
-        # 使用阿里云公开镜像，拉取速度最快
-        image: registry.cn-hangzhou.aliyuncs.com/central-mirror/redis:6.2-alpine
+        # 【重要】换成你刚构建成功的 Redis ACR 地址
+        image: crpi-isruoknymwjt6jux.cn-hangzhou.personal.cr.aliyuncs.com/dja-repo/redis:latest
         ports:
         - containerPort: 6379
 
