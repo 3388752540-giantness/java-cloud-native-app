@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.ZonedDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 @Service
@@ -30,7 +32,8 @@ public class MonitorService {
             List<NodeMetrics> nodeMetricsList = k8sClient.top().nodes().metrics().getItems();
 
             // 获取当前时间戳，作为折线图的横坐标
-            String now = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+            String now = ZonedDateTime.now(ZoneId.of("Asia/Shanghai"))
+             .format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 
             for (NodeMetrics metric : nodeMetricsList) {
                 String nodeName = metric.getMetadata().getName(); // 比如 k8s-master
