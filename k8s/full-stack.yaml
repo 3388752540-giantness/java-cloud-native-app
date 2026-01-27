@@ -1,4 +1,39 @@
-# --- 1. 后端部署 (Java 17 + MyBatis) ---
+# --- 1. Redis 部署 (缓存层) ---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        # 使用阿里云公开镜像，拉取速度最快
+        image: registry.cn-hangzhou.aliyuncs.com/central-mirror/redis:6.2-alpine
+        ports:
+        - containerPort: 6379
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+spec:
+  selector:
+    app: redis
+  ports:
+  - port: 6379
+    targetPort: 6379
+
+---
+# --- 2. 后端部署 (Java 17 + MyBatis) ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,32 +48,30 @@ spec:
       labels:
         app: java-backend
     spec:
-      # 重点：从这里指定拉取镜像时使用的 Secret
       imagePullSecrets:
       - name: aliyun-acr-secret
       containers:
       - name: java-backend
         image: crpi-isruoknymwjt6jux.cn-hangzhou.personal.cr.aliyuncs.com/dja-repo/java-app-auto:backend-latest
-        imagePullPolicy: Always  # <--- 加上这一行！强制每次都去云端拉新货
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
         env:
-        # 数据库连接 URL，指向 K8s 内部的 mysql-service
         - name: SPRING_DATASOURCE_URL
           value: "jdbc:mysql://mysql-service:3306/k8s_monitor_db?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai"
         - name: SPRING_DATASOURCE_USERNAME
           value: "root"
-        # 从 Secret 中安全获取密码
         - name: SPRING_DATASOURCE_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mysql-secret
               key: password
-        # Redis 连接配置
+        # 重点：这里的 Host 必须对应上面的 Service Name
         - name: SPRING_REDIS_HOST
           value: "redis-service"
         - name: SPRING_REDIS_PORT
           value: "6379"
+
 ---
 apiVersion: v1
 kind: Service
@@ -54,7 +87,7 @@ spec:
       nodePort: 30080
 
 ---
-# --- 2. 前端部署 (Vue 3 + Nginx) ---
+# --- 3. 前端部署 (Vue 3 + Nginx) ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -74,7 +107,7 @@ spec:
       containers:
       - name: vue-frontend
         image: crpi-isruoknymwjt6jux.cn-hangzhou.personal.cr.aliyuncs.com/dja-repo/java-app-auto:frontend-latest
-        imagePullPolicy: Always  # <--- 加上这一行！强制每次都去云端拉新货
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 
