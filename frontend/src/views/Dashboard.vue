@@ -23,7 +23,7 @@ import { onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import * as echarts from 'echarts'
 
-const API_BASE = 'http://192.168.37.100:30080/api'
+const API_BASE = 'https://api.k8s-dja.xyz/api'
 let timers = [] // 存放定时器
 
 const initChart = async (nodeName) => {
