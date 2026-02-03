@@ -17,10 +17,12 @@ def auto_deploy():
     
     print(f"[{datetime.datetime.now()}] 收到构建通知，业务类型: {service_type}")
 
+    kube_cmd = "KUBECONFIG=/home/dja/.kube/config /usr/local/bin/kubectl"
+
     if service_type == 'backend':
-        cmd = "kubectl rollout restart deployment java-backend"
+        cmd = f"{kube_cmd} rollout restart deployment java-backend"
     elif service_type == 'frontend':
-        cmd = "kubectl rollout restart deployment vue-frontend"
+        cmd = f"{kube_cmd} rollout restart deployment vue-frontend"
     else:
         return {"error": "Unknown type"}, 400
 
