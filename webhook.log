@@ -6,3 +6,7 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5000
  * Running on http://192.168.37.103:5000
 Press CTRL+C to quit
+[2026-02-03 18:28:36.257733] 收到构建通知，业务类型: backend
+127.0.0.1 - - [03/Feb/2026 18:28:36] "POST /webhook?token=k8s-123123&type=backend HTTP/1.1" 200 -
+[2026-02-03 18:29:33.040590] 收到构建通知，业务类型: frontend
+127.0.0.1 - - [03/Feb/2026 18:29:33] "POST /webhook?token=k8s-123123&type=frontend HTTP/1.1" 200 -
