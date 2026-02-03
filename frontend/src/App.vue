@@ -3,7 +3,7 @@
     <el-header class="header">
       <div class="logo">
         <el-icon><Monitor /></el-icon>
-        <span>K8s 云原生微服务管理平台</span>
+        <span>K8s 云原生微服务管理平台1</span>
       </div>
       <div class="user-info">
         <el-tag type="info">管理员: dja</el-tag>
