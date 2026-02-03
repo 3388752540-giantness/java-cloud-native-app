@@ -6,3 +6,7 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5000
  * Running on http://192.168.37.103:5000
 Press CTRL+C to quit
+127.0.0.1 - - [03/Feb/2026 17:25:08] "GET /?id=ed2c9a99-1b67-45f7-a0d5-ef852e24f7b4&vscodeBrowserReqId=1770110708400 HTTP/1.1" 404 -
+127.0.0.1 - - [03/Feb/2026 17:25:10] "POST /webhook?token=k8s-bi-she-666&type=backend HTTP/1.1" 401 -
+[2026-02-03 17:25:30.245769] 收到构建通知，业务类型: backend
+127.0.0.1 - - [03/Feb/2026 17:25:30] "POST /webhook?token=k8s-123123&type=backend HTTP/1.1" 200 -
